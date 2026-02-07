@@ -10,28 +10,29 @@ export const matchesRouter = Router();
 
 const MAX_LIMIT = 100;
 
-matchesRouter.get('/', async (req, res) => {
-    const parsed = listMatchesQuerySchema.safeParse(req.query);
+matchesRouter.get("/", async (req, res) => {
+  const parsed = listMatchesQuerySchema.safeParse(req.query);
 
+  if (!parsed.success) {
+    return res
+      .status(400)
+      .json({ error: "Invalid query.", details: parsed.error.issues });
+  }
 
-    if (!parsed.success) {
-        return res.status(400).json({error: 'Invalid query.', details: parsed.error.issues });
-    }
+  const limit = Math.min(parsed.data.limit ?? 50, MAX_LIMIT);
 
-    const limit = Math.min(parsed.data.limit ?? 50, MAX_LIMIT);
+  try {
+    const data = await db
+      .select()
+      .from(matches)
+      .orderBy(desc(matches.createdAt))
+      .limit(limit);
 
-    try {
-        const data = await db
-            .select()
-            .from(matches)
-            .orderBy((desc(matches.createdAt)))
-            .limit(limit)
-
-        res.json({ data });
-    } catch (e) {
-        res.status(500).json({ error: 'Failed to list matches.' });
-    }
-})
+    res.json({ data });
+  } catch (e) {
+    res.status(500).json({ error: "Failed to list matches." });
+  }
+});
 
 matchesRouter.post("/", async (req, res) => {
   const parsed = createMatchSchema.safeParse(req.body);
@@ -44,7 +45,8 @@ matchesRouter.post("/", async (req, res) => {
   }
 
   const { startTime, endTime, homeScore, awayScore, ...data } = parsed.data;
-
+  const status = getMatchStatus(startTime, endTime) ?? "scheduled";
+  
   try {
     const [event] = await db
       .insert(matches)
@@ -54,15 +56,15 @@ matchesRouter.post("/", async (req, res) => {
         endTime: new Date(endTime),
         homeScore: homeScore ?? 0,
         awayScore: awayScore ?? 0,
-        status: getMatchStatus(startTime, endTime),
+        status,
       })
       .returning();
 
     return res.status(201).json({ data: event });
   } catch (error) {
+    console.error("Failed to create match:", error);
     return res.status(500).json({
       error: "Failed to create match.",
-      details: error?.message ?? String(error),
     });
   }
 });

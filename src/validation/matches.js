@@ -22,14 +22,15 @@ export const createMatchSchema = z.object({
   endTime: z.iso.datetime(),
   homeScore: z.coerce.number().int().nonnegative().optional(),
   awayScore: z.coerce.number().int().nonnegative().optional(),
-}).superRefine((data, ctx) => {
-  const start = new Date(data.startTime);
-  const end = new Date(data.endTime);
-  if (end <= start) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "endTime must be chronologically after startTime",
+}).check((value, issues) => {
+  const start = new Date(value.startTime);
+  const end = new Date(value.endTime);
+
+  if (!(end.getTime() > start.getTime())) {
+    issues.push({
+      code: "custom",
       path: ["endTime"],
+      message: "endTime must be after startTime",
     });
   }
 });
