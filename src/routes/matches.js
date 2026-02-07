@@ -39,7 +39,7 @@ matchesRouter.post("/", async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({
       error: "Invalid payload.",
-      details: parsed.error.format(), // better than stringify
+      details: parsed.error.issues, // better than stringify
     });
   }
 
