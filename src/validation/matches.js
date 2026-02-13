@@ -22,11 +22,17 @@ export const createMatchSchema = z.object({
   endTime: z.iso.datetime(),
   homeScore: z.coerce.number().int().nonnegative().optional(),
   awayScore: z.coerce.number().int().nonnegative().optional(),
-}).check((data) => {
+}).superRefine((data, ctx) => {
   const start = new Date(data.startTime);
   const end = new Date(data.endTime);
-  return end > start;
-}, { message: "endTime must be chronologically after startTime", path: ["endTime"] })
+  if (end <= start) {
+    ctx.addIssue({
+      code: "custom",
+      message: "endTime must be chronologically after startTime",
+      path: ["endTime"],
+    });
+  }
+});
 
 export const updateScoreSchema = z.object({
   homeScore: z.coerce.number().int().nonnegative(),
