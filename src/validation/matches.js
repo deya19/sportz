@@ -1,9 +1,9 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const MATCH_STATUS = {
-  SCHEDULED: 'scheduled',
-  LIVE: 'live',
-  FINISHED: 'finished',
+  SCHEDULED: "scheduled",
+  LIVE: "live",
+  FINISHED: "finished",
 };
 
 export const listMatchesQuerySchema = z.object({
@@ -22,15 +22,14 @@ export const createMatchSchema = z.object({
   endTime: z.iso.datetime(),
   homeScore: z.coerce.number().int().nonnegative().optional(),
   awayScore: z.coerce.number().int().nonnegative().optional(),
-}).check((value, issues) => {
-  const start = new Date(value.startTime);
-  const end = new Date(value.endTime);
-
-  if (!(end.getTime() > start.getTime())) {
-    issues.push({
+}).superRefine((data, ctx) => {
+  const start = new Date(data.startTime);
+  const end = new Date(data.endTime);
+  if (end <= start) {
+    ctx.addIssue({
       code: "custom",
+      message: "endTime must be chronologically after startTime",
       path: ["endTime"],
-      message: "endTime must be after startTime",
     });
   }
 });
