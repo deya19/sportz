@@ -1,9 +1,9 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const MATCH_STATUS = {
-  SCHEDULED: 'scheduled',
-  LIVE: 'live',
-  FINISHED: 'finished',
+  SCHEDULED: "scheduled",
+  LIVE: "live",
+  FINISHED: "finished",
 };
 
 export const listMatchesQuerySchema = z.object({
