@@ -46,7 +46,7 @@ matchesRouter.post("/", async (req, res) => {
 
   const { startTime, endTime, homeScore, awayScore, ...data } = parsed.data;
   const status = getMatchStatus(startTime, endTime) ?? "scheduled";
-
+  
   try {
     const [event] = await db
       .insert(matches)
@@ -60,13 +60,9 @@ matchesRouter.post("/", async (req, res) => {
       })
       .returning();
 
-    try {
       if (res.app.locals.broadcastMatchCreated) {
         res.app.locals.broadcastMatchCreated(event);
       }
-    } catch (broadcastErr) {
-      console.error("Failed to broadcast match creation:", broadcastErr);
-    }
 
     return res.status(201).json({ data: event });
   } catch (error) {
@@ -76,3 +72,5 @@ matchesRouter.post("/", async (req, res) => {
     });
   }
 });
+
+
